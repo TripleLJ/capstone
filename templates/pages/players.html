@@ -1,0 +1,27 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Tsunami | Players{% endblock %}
+{% block content %}
+
+	<ul class="items">
+		{% for player in players %}
+		<li>
+			<a href="/players/{{ player.id }}">
+				<div class="item">
+					<h3>🏀  {{ player.last_name }}, {{player.first_name}}</h3>
+					<!-- <div style="display: flex">
+						<h4>
+							<a href="/players/{{player.id}}/edit"><button class="btn btn-primary btn-lg">✏️</button></a>
+						</h4>
+						<h4>
+							<a href="/players/{{player.id}}/delete"><button class="btn btn-primary btn-lg" style="margin-left:10px;">🗑️</button></a>
+						</h4>
+					</div> -->
+				</div>
+			</a>
+		</li>
+		{% endfor %}
+	</ul>
+	<h3>
+		<a href="/players/create"><button class="btn btn-primary btn-lg">Add ➕</button></a>
+	</h3>
+{% endblock %}

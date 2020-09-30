@@ -1,0 +1,50 @@
+
+
+
+{% extends 'layouts/main.html' %}
+{% block title %}Tsunami | Teams{% endblock %}
+{% block content %}
+
+
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-block alert-info fade in">
+        <a class="close" data-dismiss="alert">&times;</a>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+
+<div class="row shows">
+    {% for team in teams %}
+
+    <div class="col-sm-4">
+      <a href="/teams/{{team.id}}">
+        <div style="background-image: linear-gradient(to bottom right, {{team.color1}}, {{team.color2}});" class="tile tile-show">
+          <h3>{{ team.city }} {{ team.name}}</h3>
+          <img src="{{team.image}}" alt="Logo for {{team.name}}">
+        </div>
+      </a>
+      <!-- <div style="display: flex">
+        <h3>
+          <a href="/teams/{{team.id}}/edit"><button class="btn btn-primary btn-lg">✏️</button></a>
+        </h3>
+        <h3>
+          <a href="/teams/{{team.id}}/delete"><button class="btn btn-primary btn-lg">🗑️</button></a>
+        </h3>
+        </div> -->
+    </div>
+
+    {% endfor %}
+
+    <h3>
+  		<a href="/teams/create"><button class="btn btn-primary btn-lg">Add ➕</button></a>
+  	</h3>
+</div>
+
+
+{% endblock %}

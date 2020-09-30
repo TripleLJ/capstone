@@ -1,0 +1,55 @@
+
+
+
+{% extends 'layouts/main.html' %}
+{% block title %}Tsunami | {{team.name}}{% endblock %}
+{% block content %}
+
+
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-block alert-info fade in">
+        <a class="close" data-dismiss="alert">&times;</a>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+
+<div class="row shows">
+    <h1>{{ team.city }} {{ team.name}}</h1>
+    <div class="col-sm-6">
+      <div style="background-image: linear-gradient(to bottom right, {{team.color1}}, {{team.color2}});" class="tile tile-show">
+        <img src="{{team.image}}" alt="Logo for {{team.name}}">
+      </div>
+      <div style="display: flex">
+        <h3>
+          <a href="/teams/{{team.id}}/edit"><button class="btn btn-primary btn-lg">✏️</button></a>
+        </h3>
+        <h3>
+          <a href="/teams/{{team.id}}/delete"><button class="btn btn-primary btn-lg">🗑️</button></a>
+        </h3>
+        </div>
+    </div>
+    <div class="col-sm-6">
+      <h3>ID: {{team.id}}</h3>
+      <ul class="items">
+        {% for player in players %}
+        <a href="/players/{{ player.id }}">
+          <div class="item">
+            <h3>🏀  {{ player.last_name }}, {{player.first_name}}</h3>
+          </div>
+        </a>
+        {% endfor %}
+      </ul>
+    </div>
+
+
+
+</div>
+
+
+{% endblock %}

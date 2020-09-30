@@ -1,0 +1,81 @@
+{% extends 'layouts/main.html' %}
+{% block title %}New Player{% endblock %}
+{% block content %}
+  <div class="form-wrapper">
+    <form method="post" class="form">
+      <h3 class="form-heading">Create a Player</h3>
+      <div class="form-group">
+        <label for="first_name">First Name</label>
+        {{ form.first_name(class_ = 'form-control', autofocus = true) }}
+      </div>
+      <div class="form-group">
+        <label for="last_name">Last Name</label>
+        {{ form.last_name(class_ = 'form-control', autofocus = true) }}
+      </div>
+      <div class="form-group">
+        <label for="image">Image</label>
+        {{ form.image(class_ = 'form-control', autofocus = true) }}
+      </div>
+      <div class="form-group">
+        <label for="number">Number</label>
+        {{ form.number(class_ = 'form-control', autofocus = true) }}
+      </div>
+      <div class="form-group">
+        <label for="position">Position</label>
+        {{ form.position(class_ = 'form-control', autofocus = true) }}
+      </div>
+      <div class="form-group">
+        <label for="team_id">Team ID (found on team page)</label>
+        {{ form.team_id(class_ = 'form-control', autofocus = true) }}
+      </div>
+
+
+      <input id="playerform" type="submit" value="Create Player" class="btn btn-primary btn-lg btn-block">
+    </form>
+  </div>
+  <script>
+    console.log("First name is " + document.getElementById('first_name').value);
+    console.log("Last name is " + document.getElementById('last_name').value);
+    console.log("Image is " + document.getElementById('image').value);
+    console.log("Number is " + document.getElementById('number').value);
+    console.log("Team ID is " + document.getElementById('team_id').value);
+    console.log("Position is" is " + document.getElementById('position').value);
+
+
+
+    document.getElementById('playerform').onsubmit = function (e) {
+      e.preventDefault();
+
+      fetch('/players/create', {
+          method: 'POST',
+          body: JSON.stringify({
+              'first_name': document.getElementById('first_name').value,
+              'last_name': document.getElementById('last_name').value,
+              'image': document.getElementById('image').value,
+              'number': document.getElementById('number').value,
+              'team_id': document.getElementById('team_id').value,
+              'position': document.getElementById('position').value
+          }),
+          headers: {
+              'Content-Type': 'application/json'
+          }
+      })
+      .then(function (response) {
+          return response.json();
+      })
+      .then(function (jsonResponse) {
+          // const liItem = document.createElement('LI');
+          //
+          // liItem.innerHTML = jsonResponse['description'];
+          // document.getElementById('todos').appendChild(liItem);
+          // document.getElementById('error').className = 'hidden';
+          // window.location.reload(true);
+      })
+      .catch(function () {
+          // document.getElementById('error').className = '';
+      })
+      console.log(body)
+    }
+
+  </script>
+{% endblock %}

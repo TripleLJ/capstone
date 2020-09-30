@@ -1,0 +1,75 @@
+{% extends 'layouts/main.html' %}
+{% block title %}New Team{% endblock %}
+{% block content %}
+  <div class="form-wrapper">
+    <form method="post" class="form">
+      <h3 class="form-heading">Create a New Team</h3>
+      <div class="form-group">
+        <label for="city">City</label>
+        {{ form.city(class_ = 'form-control', autofocus = true) }}
+      </div>
+      <div class="form-group">
+        <label for="name">Name</label>
+        {{ form.name(class_ = 'form-control', autofocus = true) }}
+      </div>
+      <div class="form-group">
+        <label for="image">Image</label>
+        {{ form.image(class_ = 'form-control', autofocus = true) }}
+      </div>
+      <div class="form-group">
+        <label for="color1">Color 1</label>
+        {{ form.color1(class_ = 'form-control', autofocus = true) }}
+      </div>
+      <div class="form-group">
+        <label for="color2">Color 2</label>
+        {{ form.color2(class_ = 'form-control', autofocus = true) }}
+      </div>
+
+
+      <input id="teamform" type="submit" value="Create Team" class="btn btn-primary btn-lg btn-block">
+    </form>
+  </div>
+  <script>
+    console.log("Name is " + document.getElementById('name').value);
+    console.log("City is " + document.getElementById('city').value);
+    console.log("Image is " + document.getElementById('image').value);
+    console.log("Color 1 is " + document.getElementById('color1').value);
+    console.log("Color 2 is " + document.getElementById('color2').value);
+
+
+
+    document.getElementById('teamform').onsubmit = function (e) {
+      e.preventDefault();
+
+      fetch('/teams/create', {
+          method: 'POST',
+          body: JSON.stringify({
+              'name': document.getElementById('name').value,
+              'city': document.getElementById('city').value,
+              'image': document.getElementById('image').value,
+              'color1': document.getElementById('color1').value,
+              'color2': document.getElementById('color2').value,
+          }),
+          headers: {
+              'Content-Type': 'application/json'
+          }
+      })
+      .then(function (response) {
+          return response.json();
+      })
+      .then(function (jsonResponse) {
+          // const liItem = document.createElement('LI');
+          //
+          // liItem.innerHTML = jsonResponse['description'];
+          // document.getElementById('todos').appendChild(liItem);
+          // document.getElementById('error').className = 'hidden';
+          // window.location.reload(true);
+      })
+      .catch(function () {
+          // document.getElementById('error').className = '';
+      })
+      console.log(body)
+    }
+
+  </script>
+{% endblock %}
