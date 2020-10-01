@@ -92,14 +92,13 @@ def create_app(test_config=None):
       return redirect(url_for('get_teams'))
 
   @app.route('/teams')
-  @requires_auth2('create:teams')
-  def get_teams(jwt):
+  # @requires_auth2('create:teams')
+  def get_teams():
       teams = Team.query.all()
       return render_template('pages/teams.html', teams=teams)
 
   @app.route('/login')
   def login():
-
       return render_template('pages/login.html')
 
   @app.route('/logout')
