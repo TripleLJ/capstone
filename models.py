@@ -58,11 +58,23 @@ class Team(db.Model):
       'color1': self.color1,
       'color2': self.color2,
       }
+  def insert(self):
+      db.session.add(self)
+      db.session.commit()
+
+  def update(self):
+      db.session.commit()
+
+  def delete(self):
+      db.session.delete(self)
+      db.session.commit()
+
+
 
 class Player(db.Model):
   __tablename__ = 'Player'
 
-  id = db.Column(db.Integer, primary_key=True)
+  id = db.Column(db.Integer, primary_key=True, autoincrement=True)
   # team_id = Column(Integer, ForeignKey('Team.id'))
   team_id = db.Column(db.Integer, db.ForeignKey('Team.id'))
   first_name = db.Column(db.String)
@@ -70,15 +82,16 @@ class Player(db.Model):
   number = db.Column(db.String)
   position = db.Column(db.String)
   image = db.Column(db.String)
-  # Number is a string to avoid issues with formatting #00, #0, #06, etc. 
+  # Number is a string to avoid issues with formatting #00, #0, #06, etc.
 
 
-  def __init__(self, team_id, first_name, last_name, number, image):
+  def __init__(self, team_id, first_name, last_name, number, image, position):
     self.team_id = team_id
     self.first_name = first_name
     self.last_name = last_name
     self.number = number
     self.image = image
+    self.position = position
 
 
 
@@ -90,3 +103,14 @@ class Player(db.Model):
       'image': self.image,
       'team_id': self.team_id
       }
+
+  def insert(self):
+      db.session.add(self)
+      db.session.commit()
+
+  def update(self):
+      db.session.commit()
+
+  def delete(self):
+      db.session.delete(self)
+      db.session.commit()

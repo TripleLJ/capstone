@@ -35,7 +35,7 @@ def get_token_auth_header():
         abort(401)
     elif header_parts[0].lower() != 'bearer':
         abort(401)
-    return 'header_parts[1]'
+    return header_parts[1]
 
 
 
@@ -118,7 +118,7 @@ def verify_decode_jwt(token):
                 'description': 'Unable to find the appropriate key.'
             }, 400)
 
-def requires_auth(f):
+def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):

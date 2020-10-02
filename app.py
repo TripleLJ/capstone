@@ -8,63 +8,14 @@ import logging
 import sys
 from logging import Formatter, FileHandler
 from flask_wtf import Form
-from forms import *
+
 from wtforms import TextField, BooleanField
 from wtforms.validators import Required
-# from auth import AuthError, requires_auth, verify_decode_jwt
-from auth import get_token_auth_header, verify_decode_jwt, check_permissions
+from auth import get_token_auth_header, verify_decode_jwt, check_permissions, AuthError, requires_auth
 
 from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
-
-
-def requires_auth2(permission=''):
-    def requires_auth2decor(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            jwt = get_token_auth_header()
-            payload = verify_decode_jwt(jwt)
-            check_permissions(permission, payload)
-            return f(payload, *args, **kwargs)
-        return wrapper
-    return requires_auth2decor
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -80,129 +31,112 @@ def create_app(test_config=None):
  # Teams
  # ------------------------------------------------
   @app.route('/headers')
-  @requires_auth2('create:teams')
+  @requires_auth('create:teams')
   def headers(jwt):
       jwt = get_token_auth_header()
       return jwt
 
-
-
-  @app.route('/')
-  def index():
-      return redirect(url_for('get_teams'))
-
-  @app.route('/teams')
-  # @requires_auth2('create:teams')
-  def get_teams():
-      teams = Team.query.all()
-      return render_template('pages/teams.html', teams=teams)
-
   @app.route('/login')
   def login():
-      return render_template('pages/login.html')
+      return 'Login'
 
   @app.route('/logout')
   def logout():
+      return 'Logout'
 
-      return render_template('pages/logout.html')
+  @app.route('/login-results')
+  def loginresults():
+
+      return 'Login Results'
+
+
+
+
+
+  @app.route('/teams')
+  def get_teams():
+      teams = Team.query.all()
+      teamsarray = []
+      for team in teams:
+          teamsarray.append(team.format())
+      return jsonify ({
+          'success': True,
+          'teams': teamsarray
+          })
+
 
   @app.route('/teams/<team_id>')
   def get_team(team_id):
       team = Team.query.get(team_id)
-      players = Player.query.filter_by(team_id=team_id)
-      return render_template('pages/team.html', team=team, players=players)
-
-  @app.route('/teams/<team_id>/edit')
-  def edit_team(team_id):
-      team = Team.query.get(team_id)
-      players = Player.query.filter_by(team_id=team_id)
-      form = TeamForm(secret_key=os.urandom(32))
-      return render_template('forms/edit_team.html', team=team, players=players, form=form)
-
-
-  @app.route('/teams/create')
-  def create_team_form():
-      form = TeamForm(secret_key=os.urandom(32))
-      return render_template('forms/new_team.html', form=form)
+      teamsarray = []
+      teamsarray.append(team.format())
+      return jsonify ({
+        'success': True,
+        'team': teamsarray
+        })
 
 
 
-  @app.route('/teams/<team_id>/delete', methods=['DELETE', 'GET'])
-  def deleting_team(team_id):
+  @app.route('/teams/<team_id>', methods=['DELETE'])
+  @requires_auth('delete:teams')
+  def deleting_team(jwt, team_id):
       error = False
       try:
           team = Team.query.get(team_id)
           players = Player.query.filter_by(team_id=team_id)
-          db.session.delete(team)
+          team.delete()
           for player in players:
-              db.session.delete(player)
-          db.session.commit()
+              player.delete()
+
       except():
-          db.session.rollback()
           error = True
-      finally:
-          db.session.close()
+
       if error:
-          flash('An error occured. Could not be deleted')
           abort(500)
       else:
-          flash('Team ' + team.name + ' was deleted.')
-          return redirect(url_for('get_teams'))
+          return jsonify ({
+            'success': True,
+            'deleted_team_id': team_id
+            })
 
 
-  @app.route('/teams/create', methods=['POST'])
-  def create_team_submission():
+  @app.route('/teams', methods=['POST'])
+  @requires_auth('create:teams')
+  def create_team_submission(jwt):
       error = False
       body = {}
       try:
-          name =request.form.get('name')
-          city = request.form.get('city')
-          image = request.form.get('image')
-          color1 = request.form.get('color1')
-          color2 = request.form.get('color2')
+          body = request.get_json()
+          name = body['name']
+          city = body['city']
+          image = body['image']
+          color1 = body['color1']
+          color2 = body['color2']
 
           team = Team(name=name, city=city, image=image, color1=color1, color2=color2)
-
-          db.session.add(team)
-          db.session.commit()
-
-          body['id'] = team.id
-          body['name'] = team.name
-          body['city'] = team.city
-          body['image'] = team.image
-          body['color1'] = team.color1
-          body['color2'] = team.color2
+          team.insert()
 
       except():
-          db.session.rollback()
           error = True
-          print(sys.exc_info())
-      finally:
-          db.session.close()
-          if error:
-              flash('An error occured. Team ' + request.form['name'] + ' could not be created!')
-              abort(500)
-          else:
-            flash('Team ' + request.form['name'] + ' was successfully created!')
-            return redirect(url_for('get_teams'))
 
-  @app.route('/teams/<team_id>/edit', methods=['PATCH','POST'])
-  def edit_team_submission(team_id):
+      if error:
+          abort(500)
+      else:
+          teamsarray = []
+          teamsarray.append(team.format())
+          return jsonify ({
+          'success': True,
+          'created_team': teamsarray
+          })
+
+  @app.route('/teams/<team_id>', methods=['PATCH'])
+  @requires_auth('edit:teams')
+  def edit_team_submission(jwt, team_id):
       error = False
       body = {}
       try:
           team = Team.query.get(team_id)
 
-          team.name =request.form.get('name')
-          team.city = request.form.get('city')
-          team.image = request.form.get('image')
-          team.color1 = request.form.get('color1')
-          team.color2 = request.form.get('color2')
-
-
-
-          db.session.commit()
-
           body['id'] = team.id
           body['name'] = team.name
           body['city'] = team.city
@@ -210,18 +144,24 @@ def create_app(test_config=None):
           body['color1'] = team.color1
           body['color2'] = team.color2
 
+          team.update()
+
+
+
       except():
-          db.session.rollback()
+
           error = True
-          print(sys.exc_info())
+
       finally:
-          db.session.close()
           if error:
-              flash('An error occured. Team ' + request.form['name'] + ' could not be updated!')
               abort(500)
           else:
-            flash('Team ' + request.form['name'] + ' was successfully updated!')
-            return redirect(url_for('get_teams'))
+            teamsarray = []
+            teamsarray.append(team.format())
+            return jsonify ({
+            'success': True,
+            'team': teamsarray
+            })
 
 
 # Players
@@ -231,133 +171,163 @@ def create_app(test_config=None):
   @app.route('/players')
   def get_players():
       players = Player.query.all()
-      return render_template('pages/players.html', players=players)
+      playersarray = []
+      for player in players:
+          playersarray.append(player.format())
+      return jsonify ({
+        'success': True,
+        'players': playersarray
+      })
 
 
   @app.route('/players/<player_id>')
   def get_player(player_id):
       player = Player.query.get(player_id)
-      team = Team.query.get(player.team_id)
-      return render_template('pages/player.html', player=player, team=team)
-
-  @app.route('/players/<player_id>/edit')
-  def edit_player(player_id):
-      player = Player.query.get(player_id)
-      team = Team.query.get(player.team_id)
-      form = PlayerForm(secret_key=os.urandom(32))
-      return render_template('forms/edit_player.html', player=player, team=team, form=form)
+      playersarray = []
+      playersarray.append(player.format())
+      return jsonify ({
+        'success': True,
+        'players': playersarray
+      })
 
 
-
-  @app.route('/players/<player_id>/delete', methods=['DELETE', 'GET'])
-  def deleting_player(player_id):
+  @app.route('/players/<player_id>', methods=['DELETE'])
+  @requires_auth('delete:players')
+  def deleting_player(jwt, player_id):
       error = False
       try:
           player = Player.query.get(player_id)
-          db.session.delete(player)
-          db.session.commit()
+          player.delete()
       except():
-          db.session.rollback()
           error = True
-      finally:
-          db.session.close()
       if error:
-          flash('An error occured. Could not be deleted')
           abort(500)
       else:
-          flash('Player ' + player.last_name + ' was deleted.')
-          return redirect(url_for('get_players'))
 
-  @app.route('/players/create')
-  def create_player():
-      form = PlayerForm(secret_key=os.urandom(32))
-      return render_template('forms/new_player.html', form=form)
+          return jsonify ({
+            'success': True,
+            'deleted_player': player_id
+            })
 
-  @app.route('/players/create', methods=['PATCH','POST'])
-  def create_player_submission():
+
+  @app.route('/players', methods=['POST'])
+  @requires_auth('create:players')
+  def create_player_submission(jwt):
       error = False
       body = {}
       try:
-          first_name =request.form.get('first_name')
-          last_name = request.form.get('last_name')
-          image = request.form.get('image')
-          team_id = request.form.get('team_id')
-          number = request.form.get('number')
-          position = request.form.get('position')
+          body = request.get_json()
+          first_name = body['first_name']
+          last_name = body['last_name']
+          image = body['image']
+          team_id = body['team_id']
+          number = body['number']
+          position = body['position']
 
           player = Player(first_name=first_name, last_name=last_name, image=image, number=number, team_id=team_id, position=position)
-
-
-
-
-          db.session.add(player)
-          db.session.commit()
-
-          body['id'] = player.id
-          body['first_name'] = player.first_name
-          body['last_name'] = player.last_name
-          body['image'] = player.image
-          body['number'] = player.number
-          body['team_id'] = player.team_id
+          player.insert()
 
       except():
-          db.session.rollback()
           error = True
-          print(sys.exc_info())
-      finally:
-          db.session.close()
       if error:
-          flash('An error occured. Player ' + request.form['last_name'] + ' could not be created!')
           abort(500)
       else:
+          playersarray = []
+          playersarray.append(player.format())
+          return jsonify ({
+            'success': True,
+            'created_player': playersarray
+            })
 
-          flash('Player ' + request.form['last_name'] + ' was successfully created!')
 
-          return redirect(url_for('get_players'))
 
-  @app.route('/players/<player_id>/edit', methods=['PATCH','POST'])
-  def edit_player_submission(player_id):
+  @app.route('/players/<player_id>', methods=['PATCH'])
+  @requires_auth('edit:players')
+  def edit_player_submission(jwt, player_id):
       error = False
       body = {}
+
       try:
           player = Player.query.get(player_id)
 
-          player.first_name =request.form.get('first_name')
-          player.last_name = request.form.get('last_name')
-          player.image = request.form.get('image')
-          player.team_id = request.form.get('team_id')
-          player.number = request.form.get('number')
-          player.position = request.form.get('position')
+
+          body = request.get_json()
+
+          player.first_name = body['first_name']
+          player.last_name = body['last_name']
+          player.image = body['image']
+          player.team_id = body['team_id']
+          player.number = body['number']
+          player.position = body['position']
 
 
 
+          player.update()
 
-          db.session.commit()
-
-          body['id'] = player.id
-          body['first_name'] = player.first_name
-          body['last_name'] = player.last_name
-          body['image'] = player.image
-          body['number'] = player.number
-          body['team_id'] = player.team_id
 
       except():
-          db.session.rollback()
           error = True
-          print(sys.exc_info())
-      finally:
-          db.session.close()
+
       if error:
-          flash('An error occured. Player ' + request.form['last_name'] + ' could not be updated!')
           abort(500)
       else:
+          player = Player.query.get(player_id)
+          playersarray = []
+          playersarray.append(player.format())
+          return jsonify ({
+            'success': True,
+            'player': playersarray
+            })
 
-          flash('Player ' + request.form['last_name'] + ' was successfully updated!')
-
-          return redirect(url_for('get_players'))
 
 
+  @app.errorhandler(404)
+  def not_found(error):
+    return jsonify({
+        "success": False,
+        "error": 404,
+        "message": "Could not be found"
+        }), 404
 
+  @app.errorhandler(422)
+  def unprocessable(error):
+    return jsonify({
+        "success": False,
+        "error": 422,
+        "message": "Could not be processed"
+        }), 422
+
+  @app.errorhandler(400)
+  def bad_request(error):
+    return jsonify({
+        "success": False,
+        "error": 400,
+        "message": "Bad request"
+    }), 400
+
+  @app.errorhandler(405)
+  def bad_request(error):
+    return jsonify({
+        "success": False,
+        "error": 405,
+        "message": "Method Not Allowed"
+    }), 405
+
+  @app.errorhandler(500)
+  def bad_request(error):
+    return jsonify({
+        "success": False,
+        "error": 500,
+        "message": "Internal Server"
+    }), 500
+
+  @app.errorhandler(401)
+  def not_authorized(error):
+    return jsonify({
+        "success": False,
+        "error": 401,
+        "message": "Not authorized"
+    }), 401
   return app
 
 app = create_app()
