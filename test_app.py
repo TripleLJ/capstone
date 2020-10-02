@@ -73,7 +73,6 @@ class CapstoneTestCase(unittest.TestCase):
 
 
 
-        self.assertEqual(question, None)
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
